@@ -1,0 +1,42 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"type": "shell",
+			"label": "Eigen",
+			"command": "C:/msys64/mingw64/bin/g++.exe",
+			"args": [
+				// Compiler settings
+				// Min
+				// "-g",
+				// Max
+				"-g3",
+				// Include warnings for debugger
+				"-Wall",
+				"${file}",
+				"-o",
+				"build\\main.exe",
+				// Eigen
+				"-ID:/Projects/Github/C++_NeuralNetwork/NN_Language/src/eigen-3.3.9",
+				// SDL2
+				//-SDL2 requires -L flags in addition to -I flags
+				//-due to SDL2 lib requiring dynamic link libraries (.dll)
+				"-ID:/Projects/Github/C++_NeuralNetwork/NN_Language/src/SDL2-2.0.14/x86_64-w64-mingw32/include",
+				"-LD:/Projects/Github/C++_NeuralNetwork/NN_Language/src/SDL2-2.0.14/x86_64-w64-mingw32/lib",
+				"-lmingw32",
+				"-lSDL2main",
+				"-lSDL2"
+			],
+			"options": {
+				"cwd": "${workspaceFolder}"
+			},
+			"problemMatcher": [
+				"$gcc"
+			],
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			}
+		}
+	]
+}

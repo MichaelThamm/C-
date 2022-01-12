@@ -1,0 +1,62 @@
+_______________References_______________
+
+Can do most of what pointers do and should be used instead
+-https://www.youtube.com/watch?v=minNjVO8jkM
+-https://www.youtube.com/watch?v=FXzpFn8LJUI
+
+-Inside your function(int &x){} means that the value at the memory location (denoted by x) is passed into the function
+        rather than the memory location (denoted by &x)
+
+_______________Pointers_______________
+
+A must for functions due to robustness and efficiency
+
+int *b = &a;
+
+:syntax for b points at memory location in variable a
+
+-doesn't require data to be copied to memory when calling function
+-pointers pass the memory location of the original variable
+-This means that the original value can be modified from inside the function
+-Rather than having a breadcrumb trail for each variable in memory
+
+_______________New_______________
+
+"new" keyword is dynamic memory allocation which returns a pointer - used to refer to that area of memory
+// Puts it in the memory heap which requires future memory purge
+Avoid using new unless required
+
+As long as the return value of the variable (or input) matches function input (or parameter) then it can be interchangable
+-Ex) void func(double x) {};
+-func(double foobar) == func(pow(2,1)) // Because pow(x,y) returns a double ** Very important to remember
+
+_______________Auto_______________
+
+The auto keyword gets the type from the expression on the right of =. Therefore it will work with any type, the only requirement is to initialize the auto variable when declaring it so that the compiler can deduce the type.
+
+Examples:
+
+auto a = 0.0f;  // a is float
+auto b = std::vector<int>();  // b is std::vector<int>()
+
+MyType foo()  { return MyType(); }
+
+auto c = foo();  // c is MyType
+
+_______________Arrow Operator_______________
+
+The (->) arrow operator
+If p_emp is a pointer to an object of type Employee, then to assign the value "zara" to the first_name member of object emp, you would write something as follows −
+
+strcpy(p_emp->first_name, "zara");
+The -> is called the arrow operator. It is formed by using the minus sign followed by a greater than sign.
+
+Simply saying: To access members of a structure, use the dot operator. To access members of a structure through a pointer, use the arrow operator.
+
+_______________Char vs. String_______________
+
+Char is denoted by:
+char temp = 'a';
+
+String is denoted by:
+string temp = "a";
