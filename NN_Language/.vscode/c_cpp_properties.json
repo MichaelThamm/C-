@@ -7,7 +7,9 @@
                 // Eigen
                 "\\src\\eigen-3.3.9",
                 // SDL2
-                "\\src\\SDL2-2.0.14\\x86_64-w64-mingw32\\include"
+                "\\src\\SDL2-2.0.14\\x86_64-w64-mingw32\\include",
+                // SDL2_ttf
+                "\\src\\SDL2_ttf-2.0.15"
             ],
             "defines": [
                 "_DEBUG",

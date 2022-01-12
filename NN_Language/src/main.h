@@ -1,4 +1,30 @@
+// C++ Libs
+#include <iostream>
+#include <vector>
+#include <fstream>
+#include <string>
+#include <map>
+#include <string>
+#include <chrono>
+#include <thread>
+
+#include <iterator>
+#include <algorithm>
+
+using namespace std::this_thread; // sleep_for, sleep_until
+using namespace std::chrono; // nanoseconds, system_clock, seconds
+
+// External Libs
+#include <Eigen/Dense>
+#include <SDL2/SDL.h>
+
+using Eigen::MatrixXd;
 using namespace std;
+
+typedef float Scalar;
+typedef Eigen::MatrixXf Matrix;
+typedef Eigen::RowVectorXf RowVector;
+
 SDL_Event event;
 
 
@@ -10,6 +36,18 @@ int lengthArray(const array<T, size> &iArray)
 }
 
 
+Scalar activationFunction(Scalar x)
+{
+    return tanhf(x);
+}
+
+
+Scalar activationFunctionDerivative(Scalar x)
+{
+    return 1 - tanhf(x) * tanhf(x);
+}
+
+
 //________________class for nodes in the grid________________
 class Node
 {
@@ -18,19 +56,18 @@ public:
     int tIndexX, tIndexY = 0;
     SDL_Rect rectStruct;
 
-    Node(int &iIndexX, int &iIndexY, const int &iCanvasSizeX, const int &iCanvasSizeY, int &yButtonSize);
+    Node(int &iIndexX, int &iIndexY, const int &iCanvasSizeX, const int &iCanvasSizeY, int iArraySizeX, int iArraySizeY, int &yButtonSize);
 };
 
-Node :: Node(int &iIndexX, int &iIndexY, const int &iNodeSizeX, const int &iNodeSizeY, int &yButtonSize)
+Node :: Node(int &iIndexX, int &iIndexY, const int &iCanvasSizeX, const int &iCanvasSizeY, int iArraySizeX, int iArraySizeY, int &yButtonSize)
 {
     tIndexX = iIndexX;
     tIndexY = iIndexY;
-    rectStruct.w = iNodeSizeX;
-    rectStruct.h = iNodeSizeY;
+    rectStruct.w = iCanvasSizeX / iArraySizeX;
+    rectStruct.h = (iCanvasSizeY - yButtonSize) / iArraySizeY;
     rectStruct.x = tIndexX * rectStruct.w;
     rectStruct.y = tIndexY * rectStruct.h + yButtonSize;
 }
-
 
 // struct for a grid of array size NxM
 template <class A, class B, size_t M, size_t N>
@@ -69,11 +106,217 @@ array<array<A, M>, N> DataStream<A, M, N> :: writeToArray(array<array<A, M>, N> 
 }
 
 
+//________________class for neural network________________
+class NeuralNetwork
+{
+private:
+        vector<unsigned int> topology;
+public:
+        // constructor
+        NeuralNetwork(vector<unsigned int> topology, Scalar learningRate = Scalar(0.005));
+
+        // forward propagation
+        void propagateForward(RowVector& input);
+        // back propagation of errors made by neurons
+
+        void propagateBackward(RowVector& output);
+        // function to calculate errors made by neurons in each layer
+
+        void calcErrors(RowVector& output);
+        // function to update the weights of connections
+
+        void updateWeights();
+
+        // function to train the neural network give an array of data points
+        void train(vector<RowVector*> input_data, vector<RowVector*> output_data);
+
+        vector<RowVector*> neuronLayers; // stores the different layers of out network
+        vector<RowVector*> cacheLayers; // stores the unactivated (activation fn not yet applied) values of layers
+        vector<RowVector*> deltas; // stores the error contribution of each neurons
+        vector<Matrix*> weights; // the connection weights itself
+        Scalar learningRate;
+};
+
+
+NeuralNetwork :: NeuralNetwork(vector<unsigned int> topology, Scalar learningRate)
+{
+        string temp = "";
+        
+        this->topology = topology;
+        this->learningRate = learningRate;
+        for (unsigned int i = 0; i < topology.size(); i++) {
+                // initialize neuron layers
+                if (i == topology.size() - 1)
+                neuronLayers.push_back(new RowVector(topology[i]));
+                else
+                neuronLayers.push_back(new RowVector(topology[i] + 1));
+        
+                // initialize cache and delta vectors
+                cacheLayers.push_back(new RowVector(neuronLayers.size()));
+                deltas.push_back(new RowVector(neuronLayers.size()));
+        
+                // vector.back() gives the handle to recently added element
+                // coeffRef gives the reference of value at that place
+                // (using this as we are using pointers here)
+                if (i != topology.size() - 1) {
+                neuronLayers.back()->coeffRef(topology[i]) = 1.0;
+                cacheLayers.back()->coeffRef(topology[i]) = 1.0;
+                }
+        
+                // initialize weights matrix
+                if (i > 0) {
+                if (i != topology.size() - 1) {
+                        weights.push_back(new Matrix(topology[i - 1] + 1, topology[i] + 1));
+                        weights.back()->setRandom();
+                        weights.back()->col(topology[i]).setZero();
+                        weights.back()->coeffRef(topology[i - 1], topology[i]) = 1.0;
+                }
+                else {
+                        weights.push_back(new Matrix(topology[i - 1] + 1, topology[i]));
+                        weights.back()->setRandom();
+                }
+                }
+        }
+};
+
+
+void NeuralNetwork :: propagateForward(RowVector& input)
+{
+    // set the input to input layer
+    // block returns a part of the given vector or matrix
+    // block takes 4 arguments : startRow, startCol, blockRows, blockCols
+    neuronLayers.front()->block(0, 0, 1, neuronLayers.front()->size() - 1) = input;
+ 
+    // propagate the data forawrd
+    for (unsigned int i = 1; i < topology.size(); i++) {
+        // already explained above
+        (*neuronLayers[i]) = (*neuronLayers[i - 1]) * (*weights[i - 1]);
+    }
+ 
+    // apply the activation function to your network
+    // unaryExpr applies the given function to all elements of CURRENT_LAYER
+    for (unsigned int i = 1; i < topology.size() - 1; i++) {
+        neuronLayers[i]->block(0, 0, 1, topology[i]).unaryExpr(ptr_fun(activationFunction));
+    }
+}
+
+
+void NeuralNetwork :: calcErrors(RowVector& output)
+{
+    // calculate the errors made by neurons of last layer
+    (*deltas.back()) = output - (*neuronLayers.back());
+ 
+    // error calculation of hidden layers is different
+    // we will begin by the last hidden layer
+    // and we will continue till the first hidden layer
+    for (unsigned int i = topology.size() - 2; i > 0; i--) {
+        (*deltas[i]) = (*deltas[i + 1]) * (weights[i]->transpose());
+    }
+}
+
+
+void NeuralNetwork :: updateWeights()
+{
+    // topology.size()-1 = weights.size()
+    for (unsigned int i = 0; i < topology.size() - 1; i++) {
+        // in this loop we are iterating over the different layers (from first hidden to output layer)
+        // if this layer is the output layer, there is no bias neuron there, number of neurons specified = number of cols
+        // if this layer not the output layer, there is a bias neuron and number of neurons specified = number of cols -1
+        if (i != topology.size() - 2) {
+            for (unsigned int c = 0; c < weights[i]->cols() - 1; c++) {
+                for (unsigned int r = 0; r < weights[i]->rows(); r++) {
+                    weights[i]->coeffRef(r, c) += learningRate * deltas[i + 1]->coeffRef(c) * activationFunctionDerivative(cacheLayers[i + 1]->coeffRef(c)) * neuronLayers[i]->coeffRef(r);
+                }
+            }
+        }
+        else {
+            for (unsigned int c = 0; c < weights[i]->cols(); c++) {
+                for (unsigned int r = 0; r < weights[i]->rows(); r++) {
+                    weights[i]->coeffRef(r, c) += learningRate * deltas[i + 1]->coeffRef(c) * activationFunctionDerivative(cacheLayers[i + 1]->coeffRef(c)) * neuronLayers[i]->coeffRef(r);
+                }
+            }
+        }
+    }
+}
+
+
+void NeuralNetwork :: propagateBackward(RowVector& output)
+{
+    calcErrors(output);
+    updateWeights();
+}
+
+
+void NeuralNetwork :: train(vector<RowVector*> input_data, vector<RowVector*> output_data)
+{
+    for (unsigned int i = 0; i < input_data.size(); i++) {
+        cout << "Input to neural network is : " << *input_data[i] << endl;
+        propagateForward(*input_data[i]);
+        cout << "Expected output is : " << *output_data[i] << endl;
+        cout << "Output produced is : " << *neuronLayers.back() << endl;
+        propagateBackward(*output_data[i]);
+        cout << "MSE : " << sqrt((*deltas.back()).dot((*deltas.back())) / deltas.back()->size()) << endl;
+    }
+}
+
+
+//________________User functions________________
+void readCSV(string filename, vector<RowVector*>& data)
+{
+    data.clear();
+    ifstream file(filename);
+    string line, word;
+    // determine number of columns in file
+    getline(file, line, '\n');
+    stringstream ss(line);
+    vector<Scalar> parsed_vec;
+    while (getline(ss, word, ','))
+    {
+        parsed_vec.push_back(Scalar(stof(&word[0])));
+    }
+    unsigned int cols = parsed_vec.size();
+    data.push_back(new RowVector(cols));
+    for (unsigned int i = 0; i < cols; i++) {
+        data.back()->coeffRef(1, i) = parsed_vec[i];
+    }
+ 
+    // read the file
+    if (file.is_open()) {
+        while (getline(file, line, '\n')) {
+            stringstream ss(line);
+            data.push_back(new RowVector(1, cols));
+            unsigned int i = 0;
+            while (getline(ss, word, ','))
+            {
+                data.back()->coeffRef(i) = Scalar(stof(&word[0]));
+                i++;
+            }
+        }
+    }
+}
+
+
+void genData(string filename)
+{
+    ofstream file1(filename + "-in");
+    ofstream file2(filename + "-out");
+    for (unsigned int r = 0; r < 1000; r++) {
+        Scalar x = rand() / Scalar(RAND_MAX);
+        Scalar y = rand() / Scalar(RAND_MAX);
+        file1 << x << ", " << y << endl;
+        file2 << 2 * x + 10 + y << endl;
+    }
+    file1.close();
+    file2.close();
+}
+
+
 // Produce dictionary of Datastream objects
 template <class typeKey, class typeValue, class A, size_t M, size_t N>
 map<typeKey, typeValue> translator(string &iString)
 {
     map<typeKey, typeValue> oDictKeyboard = {};
+
     cout << "Please enter a valid keyboard character: " << endl;
 
     array<array<A, M>, N> tArray{};
@@ -93,10 +336,9 @@ map<typeKey, typeValue> translator(string &iString)
 
 
 template <class typeKey, class typeValue, class A, size_t M, size_t N>
-Grid <Node*, A, M, N> SDL_Canvas(bool &iTrain, char &iChar, array<array<A, M>, N> &iInputArray, map<typeKey, typeValue> &idictDatastream, bool &iRedButton)
+Grid <Node*, A, M, N> SDL_Canvas(bool &iTrain, char &iChar, array<array<A, M>, N> &iInputArray, map<typeKey, typeValue> &idictDatastream)
 {
-    bool bIsRunning = true;
-    bool bGreenButton = false;
+    bool isRunning = true;
     Grid <Node*, A, M, N> oInputGrid;
 
     int xWindow, yWindow;
@@ -104,7 +346,7 @@ Grid <Node*, A, M, N> SDL_Canvas(bool &iTrain, char &iChar, array<array<A, M>, N
     int xIndexNode, yIndexNode;
     const int cHeight = 600, cWidth = 800;
     int xButtonSize = cWidth, yButtonSize = cHeight/20;
-    int xNodeSize = cWidth/lengthArray(oInputGrid.tRectArray[0]), yNodeSize = (cHeight - 2*yButtonSize)/lengthArray(oInputGrid.tRectArray);
+    int xNodeWidth = cWidth/lengthArray(oInputGrid.tRectArray[0]), yNodeWidth = (cHeight - yButtonSize)/lengthArray(oInputGrid.tRectArray);
 
     // Code to define the expected results for each data entry
     if (iTrain)
@@ -134,12 +376,11 @@ Grid <Node*, A, M, N> SDL_Canvas(bool &iTrain, char &iChar, array<array<A, M>, N
         // This is based on how well I have trained the NN. Ex) user inputs a smiley so the NN might predict its the letter "L" because its the closest to what it was trained with
     }
 
-    // Initialize RectArray with Node objects
     for (int i = 0; i < lengthArray(oInputGrid.tRectArray); i++)
     {
         for (int j = 0; j < lengthArray(oInputGrid.tRectArray[i]); j++)
         {
-            oInputGrid.tRectArray[i][j] = new Node (j, i, xNodeSize, yNodeSize, yButtonSize);
+            oInputGrid.tRectArray[i][j] = new Node (j, i, cWidth, (cHeight - yButtonSize), lengthArray(oInputGrid.tRectArray[i]), lengthArray(oInputGrid.tRectArray), yButtonSize);
         }
     }
 
@@ -152,18 +393,34 @@ Grid <Node*, A, M, N> SDL_Canvas(bool &iTrain, char &iChar, array<array<A, M>, N
         }
     }
 
+    // cout << "____________________" << endl;
+    // cout << &oInputGrid.tRectArray[0][0] -> state << endl;
+    // cout << &oInputGrid.tNumbersArray[0][0] << endl;
+    // cout << oInputGrid.tRectArray[0][0] -> state << endl;
+    // cout << oInputGrid.tNumbersArray[0][0] << endl;
+    // cout << "********************" << endl;
+    // oInputGrid.tRectArray[0][0] -> state = 1;
+    // cout << &oInputGrid.tRectArray[0][0] -> state << endl;
+    // cout << &oInputGrid.tNumbersArray[0][0] << endl;
+    // cout << oInputGrid.tRectArray[0][0] -> state << endl;
+    // cout << *oInputGrid.tNumbersArray[0][0] << endl;
+
+    // FIXME - I need to printArray the input array (Node) and the keyboard (DataStream) arrays
+
     string sWindowDesc = "Please draw this keyboard character: ";
     sWindowDesc.push_back(iChar);
     sWindowDesc.append("   Note: Left mouse click to draw, Right mouse click to erase");
     char * cWindowDesc = &sWindowDesc[0];
-    SDL_Window *window = SDL_CreateWindow(cWindowDesc, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, cWidth, cHeight, SDL_WINDOW_RESIZABLE);
+    SDL_Window *window = SDL_CreateWindow(cWindowDesc, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, cWidth, (cHeight - yButtonSize), SDL_WINDOW_RESIZABLE);
     SDL_Renderer *renderer = SDL_CreateRenderer(window, -1, 0);
     SDL_Rect greenButton, redButton;
 
     SDL_Init(SDL_INIT_EVERYTHING);
 
-    // FIXME - Use SDL_test_font & SDL_test_images
+    // printArray() function to return the array values after having drawn to them
+    // consider defaulting the arrays in case you dont want to draw them all the time
 
+    // FIXME - this requires a new external library
     // Text for buttons
     // TTF_Font* Sans = TTF_OpenFont("Sans.ttf", 24);
     // SDL_Color White = {255, 255, 255};
@@ -174,7 +431,7 @@ Grid <Node*, A, M, N> SDL_Canvas(bool &iTrain, char &iChar, array<array<A, M>, N
     // Message_rect.x = 0; Message_rect.y = 0; Message_rect.w = 100; Message_rect.h = 100;
     // SDL_RenderCopy(renderer, Message, NULL, &Message_rect);
 
-    while (bIsRunning && !iRedButton && !bGreenButton)
+    while (isRunning)
     {
             // Set canvas background colour
             SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
@@ -211,58 +468,48 @@ Grid <Node*, A, M, N> SDL_Canvas(bool &iTrain, char &iChar, array<array<A, M>, N
                     {
                     // If close window
                     case SDL_QUIT:
-                        bIsRunning = false;
+                        isRunning = false;
+                        break;
 
                     // If keypress
                     case SDL_KEYDOWN:
                         // If keypress was "Esc"
                         if (event.key.keysym.sym == SDLK_ESCAPE)
                         {
-                            bIsRunning = false;
+                                isRunning = false;
                         }
                     // If mouse click
                     case SDL_MOUSEBUTTONDOWN:
                         SDL_GetWindowPosition(window, &xWindow, &yWindow);
                         SDL_GetGlobalMouseState(&xMouse, &yMouse);
+                        
+                        // FIXME - update this for the buttons
+                        xIndexNode = (xMouse - xWindow) / xNodeWidth;
+                        yIndexNode = (yMouse - yWindow) / yNodeWidth;
 
-                        // Clicked in grid
-                        if ((yButtonSize < (yMouse - yWindow)) && ((yMouse - yWindow) < (cHeight - yButtonSize)))
+                        if (event.button.button == SDL_BUTTON_LEFT)
                         {
-                            xIndexNode = (xMouse - xWindow) / xNodeSize;
-                            yIndexNode = (yMouse - yWindow - yButtonSize) / yNodeSize;
-
-                            if (event.button.button == SDL_BUTTON_LEFT)
+                            if ((yMouse - yWindow) < yButtonSize)
                             {
+                                cout << "Peeppeeee" << endl;
+                                // Top button pressed
+                            }
+                            else if ((yMouse - yWindow) >= (cHeight - yButtonSize))
+                            {
+                                cout << "Pooppoooo" << endl;
+                                // Bottom button pressed
+                            }
+                            else
+                            {
+                                // program in an exit case when red yButtonSize
+                                bool redButton = false, greenButton;
                                 oInputGrid.tRectArray[yIndexNode][xIndexNode] -> state = 1;
                             }
-
-                            if (event.button.button == SDL_BUTTON_RIGHT)
-                            {
-                                oInputGrid.tRectArray[yIndexNode][xIndexNode] -> state = 0;
-                            }
                         }
 
-                        // Green button pressed
-                        else if (yButtonSize >= (yMouse - yWindow))
+                        if (event.button.button == SDL_BUTTON_RIGHT)
                         {
-                            if (event.button.button == SDL_BUTTON_LEFT)
-                            {
-                                bGreenButton = true;
-                            }
-                        }
-
-                        // Red button pressed
-                        else if ((yMouse - yWindow) >= (cHeight - yButtonSize))
-                        {
-                            if (event.button.button == SDL_BUTTON_LEFT)
-                            {
-                                iRedButton = true;
-                            }
-                        }
-
-                        else
-                        {
-                            // Nothing
+                            oInputGrid.tRectArray[yIndexNode][xIndexNode] -> state = 0;
                         }
                     }
             }
@@ -300,72 +547,77 @@ int compareArray(array<array<A, M>, N> &iInputArray1, array<array<B, M>, N> &iIn
 
 
 template <class A, size_t M, size_t N>
-array<array<int, M>, N> noise(int &iPercent, array<array<A, M>, N> &iInputArray)
+void noise(int &iPercent, array<array<A, M>, N> &iInputArray)
 {
     int randNumN, randNumE, randNumS, randNumW;
     int max = 100, min = 0;
-    array<array<int, M>, N> coppiedArray {};
-    
-    // copy input array contents into coppiedArray
-    for (int i = 0; i < lengthArray(iInputArray); i++)
-    {
-        for (int j = 0; j < lengthArray(iInputArray[0]); j++)
-        {
-            coppiedArray[i][j] = *iInputArray[i][j];
-        }
-    }
 
     for (int i = 0; i < lengthArray(iInputArray); i++)
     {
         for (int j = 0; j < lengthArray(iInputArray[0]); j++)
         {
-            if (*iInputArray[i][j] == 1)
+            if (iInputArray[i][j] -> state == 1)
             {
                 // Pseudo random based on input percent
-                randNumN = rand()%(max - min + 1) + min;
-                randNumE = rand()%(max - min + 1) + min;
-                randNumS = rand()%(max - min + 1) + min;
-                randNumW = rand()%(max - min + 1) + min;
-                cout << randNumN << ", " << randNumE << ", " << randNumS << ", " << randNumW << endl;
+                randNumN = rand()%((max - iPercent)-min + 1) + min;
+                randNumE = rand()%((max - iPercent)-min + 1) + min;
+                randNumS = rand()%((max - iPercent)-min + 1) + min;
+                randNumW = rand()%((max - iPercent)-min + 1) + min;
+
                 // North node (not based on canvas coords)
                 if (i > 0)
                 {
-                    if (randNumN <= iPercent)
+                    if (randNumN == 0)
                     {
-                        *iInputArray[i-1][j] = 1;
+                        iInputArray[i-1][j] -> state == 1;
                     }
                 }
                 // East node (not based on canvas coords)
                 if (j < lengthArray(iInputArray[0]) - 1)
                 {  
-                    if (randNumE <= iPercent)
+                    if (randNumE == 0)
                     {
-                        *iInputArray[i][j+1] = 1;
+                        iInputArray[i][j+1] -> state == 1;
                     }
                 }
                 // South node (not based on canvas coords)
                 if (i < lengthArray(iInputArray) - 1)
                 {
-                    if (randNumS <= iPercent)
+                    if (randNumS == 0)
                     {
-                        *iInputArray[i+1][j] = 1;
+                        iInputArray[i+1][j] -> state == 1;
                     }
                 }
                 // West node (not based on canvas coords)
                 if (j > 0)
                 {
-                    if (randNumW <= iPercent)
+                    if (randNumW == 0)
                     {
-                        *iInputArray[i][j-1] = 1;
+                        iInputArray[i][j-1] -> state == 1;
                     }
                 }
             }
         }
     }
-
-    return coppiedArray;
 }
 
+
+// void draw
+//             SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+//             for (int i = 0; i < lengthArray(oInputGrid.tRectArray); i++)
+//             {
+//                 for (int j = 0; j < lengthArray(oInputGrid.tRectArray[i]); j++)
+//                 {
+//                     if (oInputGrid.tRectArray[i][j] -> state == 0)
+//                     {
+//                         SDL_RenderDrawRect(renderer, &oInputGrid.tRectArray[i][j] -> rectStruct);
+//                     }
+//                     else
+//                     {
+//                         SDL_RenderFillRect(renderer, &oInputGrid.tRectArray[i][j] -> rectStruct);
+//                     }
+//                 }
+//             }
 
 template <class A, size_t M, size_t N>
 void printArray(array<array<A, M>, N> &iArray)

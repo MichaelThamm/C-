@@ -17,12 +17,14 @@
 				"-o",
 				"build\\main.exe",
 				// Eigen
-				"-ID:/Projects/Github/C++_NeuralNetwork/NN_Language/src/eigen-3.3.9",
+				"-ID:/Projects/Coding/C++/NN_Language/src/eigen-3.3.9",
 				// SDL2
 				//-SDL2 requires -L flags in addition to -I flags
 				//-due to SDL2 lib requiring dynamic link libraries (.dll)
-				"-ID:/Projects/Github/C++_NeuralNetwork/NN_Language/src/SDL2-2.0.14/x86_64-w64-mingw32/include",
-				"-LD:/Projects/Github/C++_NeuralNetwork/NN_Language/src/SDL2-2.0.14/x86_64-w64-mingw32/lib",
+				"-ID:/Projects/Coding/C++/NN_Language/src/SDL2-2.0.14/x86_64-w64-mingw32/include",
+				"-LD:/Projects/Coding/C++/NN_Language/src/SDL2-2.0.14/x86_64-w64-mingw32/lib",
+				// SDL2_ttf
+				"-ID:/Projects/Coding/C++/NN_Language/src/SDL2_ttf-2.0.15",
 				"-lmingw32",
 				"-lSDL2main",
 				"-lSDL2"

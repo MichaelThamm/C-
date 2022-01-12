@@ -34,33 +34,33 @@ Learn From?
 	That youtube video was a warmup for learning to set up a VS Code dev environments.
 	If you want to instead use my template dev environment:
 
-	Unzip the C++_NeuralNetwork.zip file to a preferred location where your own dev environment will be located.
+	Unzip the C++.zip file to a preferred location where your own dev environment will be located.
 
 	Watch this video to install a compiler (mingw):
 
 	http://mingw-w64.org/doku.php/download
 	https://www.youtube.com/watch?v=0HD0pqVtsmw&t=0s
 
-	Copy the folder path where the C++_NeuralNetwork folder was unziped as "C++_NeuralNetwork"
+	Copy the folder path where the C++ folder was unziped as "C++"
 	Open VSCode and go to:
-	1) File>Open Workspace  -  open the <Your Folder>\C++_NeuralNetwork\NN_Language\NeuralNet.code-workspace file
-	2) In C++_NeuralNetwork .vscode\c_cpp_properties.json change line 18 from:
+	1) File>Open Workspace  -  open the <Your Folder>\C++\NN_Language\NeuralNet.code-workspace file
+	2) In C++ .vscode\c_cpp_properties.json change line 18 from:
 			"compilerPath": "<My Folder>/msys64/mingw64/bin/g++.exe",
 			to:
 			"compilerPath": "<Your Folder>/msys64/mingw64/bin/g++.exe",
-	3) In C++_NeuralNetwork tasks.json change line 7 from:
+	3) In C++ tasks.json change line 7 from:
 			"command": "<My Folder>/msys64/mingw64/bin/g++.exe",
 			to:
 			"command": "<Your Folder>/msys64/mingw64/bin/g++.exe",
-	4) In C++_NeuralNetwork tasks.json change from:
-			"-I<My Folder>C++_NeuralNetwork/NN_Language/src/eigen-3.3.9",
-			"-I<My Folder>C++_NeuralNetwork/NN_Language/src/SDL2-2.0.14/x86_64-w64-mingw32/include",
-			"-L<My Folder>C++_NeuralNetwork/NN_Language/src/SDL2-2.0.14/x86_64-w64-mingw32/lib",
+	4) In C++ tasks.json change from:
+			"-I<My Folder>C++/NN_Language/src/eigen-3.3.9",
+			"-I<My Folder>C++/NN_Language/src/SDL2-2.0.14/x86_64-w64-mingw32/include",
+			"-L<My Folder>C++/NN_Language/src/SDL2-2.0.14/x86_64-w64-mingw32/lib",
 			to:
-			"-I<Your Folder>C++_NeuralNetwork/NN_Language/src/eigen-3.3.9",
+			"-I<Your Folder>C++/NN_Language/src/eigen-3.3.9",
 			"-I<Your Folder>C++/NN_Language/src/SDL2-2.0.14/x86_64-w64-mingw32/include",
-			"-L<Your Folder>C++_NeuralNetwork/NN_Language/src/SDL2-2.0.14/x86_64-w64-mingw32/lib",
-	5) In C++_NeuralNetwork launch.json change line 18 from:
+			"-L<Your Folder>C++/NN_Language/src/SDL2-2.0.14/x86_64-w64-mingw32/lib",
+	5) In C++ launch.json change line 18 from:
 			"miDebuggerPath": "<My Folder>/msys64/mingw64/bin/gdb.exe",
 			to:
 			"miDebuggerPath": "<Your Folder>/msys64/mingw64/bin/gdb.exe",
@@ -79,7 +79,7 @@ https://www.youtube.com/watch?v=rgCJbsCSARM&t=815s
 
 If it worked congrats!
 -Expected result is some data dump to the terminal and a tab should open with a GUI of a red screen
--The C++_NeuralNetwork folder is large in size due to the external libs included (Eigen & SDL2)
+-The C++ folder is large in size due to the external libs included (Eigen & SDL2)
 	If you want a barebones environment or do not need these, remove them from the terminal execution and the ./src folder
 
 
