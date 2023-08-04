@@ -1,3 +1,7 @@
+Purpose:
+
+Using reinforcement learning, the NN will learn to predict the alphabet that you are drawing in the pixelated drawing board. This takes many generations to adequately train the model and was mainly intended as an intro project for NNs.
+
 Requirements:
 
 This could take 30 minutes for initial set up
