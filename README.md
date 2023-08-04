@@ -12,60 +12,63 @@ System Properties You Should Know:
 ***********START HERE***********
 
 Learn From?
+
 -----------SCRATCH-----------
-	To create a workspace (dev environment):
 
-	https://www.youtube.com/watch?v=0HD0pqVtsmw&t=0s
-	https://www.youtube.com/watch?v=rgCJbsCSARM&t=815s
+ To create a workspace (dev environment):
 
-	Setting up your own external libs:
+https://www.youtube.com/watch?v=0HD0pqVtsmw&t=0s
+https://www.youtube.com/watch?v=rgCJbsCSARM&t=815s
 
-			Getting SDL2 to work:
+Setting up your own external libs:
 
-			https://giovanni.codes/setup-sdl2-with-visual-studio-code-and-mingw64-on-windows/
+Getting SDL2 to work:
 
-			More Linking Libs:
+https://giovanni.codes/setup-sdl2-with-visual-studio-code-and-mingw64-on-windows/
 
-			https://stackoverflow.com/questions/10358745/how-to-use-libraries
-			https://stackoverflow.com/questions/52910102/vscode-c-task-json-include-path-and-libraries
+More Linking Libs:
+
+https://stackoverflow.com/questions/10358745/how-to-use-libraries
+https://stackoverflow.com/questions/52910102/vscode-c-task-json-include-path-and-libraries
 
 
------------NOT-SCRATCH-----------
-	That youtube video was a warmup for learning to set up a VS Code dev environments.
-	If you want to instead use my template dev environment:
+-----------HEAD-START-----------
 
-	Unzip the C++.zip file to a preferred location where your own dev environment will be located.
+That youtube video was a warmup for learning to set up a VS Code dev environments.
+If you want to instead use my template dev environment:
 
-	Watch this video to install a compiler (mingw):
+Unzip the C++.zip file to a preferred location where your own dev environment will be located.
 
-	http://mingw-w64.org/doku.php/download
-	https://www.youtube.com/watch?v=0HD0pqVtsmw&t=0s
+Watch this video to install a compiler (mingw):
 
-	Copy the folder path where the C++ folder was unziped as "C++"
-	Open VSCode and go to:
-	1) File>Open Workspace  -  open the <Your Folder>\C++\NN_Language\NeuralNet.code-workspace file
-	2) In C++ .vscode\c_cpp_properties.json change line 18 from:
-			"compilerPath": "<My Folder>/msys64/mingw64/bin/g++.exe",
-			to:
-			"compilerPath": "<Your Folder>/msys64/mingw64/bin/g++.exe",
-	3) In C++ tasks.json change line 7 from:
-			"command": "<My Folder>/msys64/mingw64/bin/g++.exe",
-			to:
-			"command": "<Your Folder>/msys64/mingw64/bin/g++.exe",
-	4) In C++ tasks.json change from:
-			"-I<My Folder>C++/NN_Language/src/eigen-3.3.9",
-			"-I<My Folder>C++/NN_Language/src/SDL2-2.0.14/x86_64-w64-mingw32/include",
-			"-L<My Folder>C++/NN_Language/src/SDL2-2.0.14/x86_64-w64-mingw32/lib",
-			to:
-			"-I<Your Folder>C++/NN_Language/src/eigen-3.3.9",
-			"-I<Your Folder>C++/NN_Language/src/SDL2-2.0.14/x86_64-w64-mingw32/include",
-			"-L<Your Folder>C++/NN_Language/src/SDL2-2.0.14/x86_64-w64-mingw32/lib",
-	5) In C++ launch.json change line 18 from:
-			"miDebuggerPath": "<My Folder>/msys64/mingw64/bin/gdb.exe",
-			to:
-			"miDebuggerPath": "<Your Folder>/msys64/mingw64/bin/gdb.exe",
-	6) In VSCode go to:
-	Run>Start Debugging
+http://mingw-w64.org/doku.php/download
+https://www.youtube.com/watch?v=0HD0pqVtsmw&t=0s
+
+Copy the folder path where the C++ folder was unziped as "C++"
+Open VSCode and go to:
+1) File>Open Workspace  -  open the <Your Folder>\C++\NN_Language\NeuralNet.code-workspace file
+2) In C++ .vscode\c_cpp_properties.json change line 18 from:
+	"compilerPath": "<My Folder>/msys64/mingw64/bin/g++.exe",
+	to:
+	"compilerPath": "<Your Folder>/msys64/mingw64/bin/g++.exe",
+3) In C++ tasks.json change line 7 from:
+	"command": "<My Folder>/msys64/mingw64/bin/g++.exe",
+	to:
+	"command": "<Your Folder>/msys64/mingw64/bin/g++.exe",
+4) In C++ tasks.json change from:
+	"-I<My Folder>C++/NN_Language/src/eigen-3.3.9",
+	"-I<My Folder>C++/NN_Language/src/SDL2-2.0.14/x86_64-w64-mingw32/include",
+	"-L<My Folder>C++/NN_Language/src/SDL2-2.0.14/x86_64-w64-mingw32/lib",
+	to:
+	"-I<Your Folder>C++/NN_Language/src/eigen-3.3.9",
+	"-I<Your Folder>C++/NN_Language/src/SDL2-2.0.14/x86_64-w64-mingw32/include",
+	"-L<Your Folder>C++/NN_Language/src/SDL2-2.0.14/x86_64-w64-mingw32/lib",
+5) In C++ launch.json change line 18 from:
+	"miDebuggerPath": "<My Folder>/msys64/mingw64/bin/gdb.exe",
+	to:
+	"miDebuggerPath": "<Your Folder>/msys64/mingw64/bin/gdb.exe",
+6) In VSCode go to:
+Run>Start Debugging
 
 
 The #include main.h statement pulls all the class and function definitions from the main.h header file.
