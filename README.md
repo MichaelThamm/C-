@@ -29,7 +29,7 @@ More Linking Libs:
 
 Watch this video to install a compiler (mingw):
 * [mingw-w64](https://www.mingw-w64.org/)
-* [gcc-g++-gdb-windows](https://www.youtube.com/watch?v=0HD0pqVtsmw&t=0s)
+* [gcc/g++/gdb/windows-config](https://www.youtube.com/watch?v=0HD0pqVtsmw&t=0s)
 
 The #include main.h statement pulls all the class and function definitions from the [main.h header file](https://www.youtube.com/watch?v=C2cfz7klsQc). This cleans up the main.cpp code.
 
@@ -37,5 +37,3 @@ If you are having a hard time [use this tutorial](https://www.youtube.com/watch?
 
 If it worked congrats!
 * Expected result is some data dump to the terminal and a tab should open with a GUI of a red screen
-* The C++ folder is large in size due to the external libs included (Eigen & SDL2)
-  * If you want a barebones environment or do not need these, remove them from the terminal execution and the ./src folder
